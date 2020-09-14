@@ -11,6 +11,7 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @all_ratings=Movie.all_ratings
     if params[:order]=="title"
       @movies=Movie.all.order(params[:order])
       @highlight_title = "hilite"
@@ -19,6 +20,13 @@ class MoviesController < ApplicationController
       @highlight_date = "hilite"
     else
       @movies = Movie.all
+    end
+    if params[:ratings]
+      @ratings=params[:ratings]
+      @movies=@movies.where(rating: @ratings.keys)
+    else
+      @ratings=Hash[@all_ratings.collect {|rating| [rating, rating]}]
+      @movies=@movies
     end
   end
 
