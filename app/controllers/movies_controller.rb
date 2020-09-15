@@ -12,11 +12,23 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings=Movie.all_ratings
-    if params[:order]=="title"
-      @movies=Movie.all.order(params[:order])
+    redirectFlag=0
+    if params[:order]
+      @orderList=params[:order]
+    else
+      @orderList=session[:order]
+    end
+    if (params[:order]==nil && session[:order]!=nil)
+      redirectFlag=1
+    end
+    if params[:order]!= session[:order]
+      session[:order]=@orderList
+    end
+    if @orderList=="title"
+      @movies=Movie.all.order(@orderList)
       @highlight_title = "hilite"
-    elsif params[:order]=="release_date"
-      @movies=Movie.all.order(params[:order])
+    elsif @orderList=="release_date"
+      @movies=Movie.all.order(@orderList)
       @highlight_date = "hilite"
     else
       @movies = Movie.all
@@ -25,8 +37,21 @@ class MoviesController < ApplicationController
       @ratings=params[:ratings]
       @movies=@movies.where(rating: @ratings.keys)
     else
-      @ratings=Hash[@all_ratings.collect {|rating| [rating, rating]}]
-      @movies=@movies
+      if session[:ratings]
+        @ratings=session[:ratings]
+        @movies=@movies.where(rating: @ratings.keys)
+        redirectFlag=1
+      else
+        @ratings=Hash[@all_ratings.collect {|rating| [rating, rating]}]
+        @movies=@movies
+      end
+    end
+    if @ratings != session[:ratings]
+      session[:ratings]=@ratings
+    end
+    if redirectFlag==1
+      flash.keep
+      redirect_to movies_path(order: session[:order],ratings: session[:ratings])
     end
   end
 
